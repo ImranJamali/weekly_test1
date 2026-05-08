@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Weekly Test 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f0e;
+    --surface: #111715;
+    --card: #141c1a;
+    --border: #1e2e2a;
+    --accent: #00ffb3;
+    --accent2: #ff6b35;
+    --correct: #00e676;
+    --wrong: #ff1744;
+    --text: #dff0ea;
+    --muted: #4d7068;
+    --easy: #00e676;
+    --medium: #ffab40;
+    --hard: #ff5252;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 10% 30%, rgba(0,255,179,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 70%, rgba(255,107,53,0.05) 0%, transparent 55%);
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    color: var(--accent);
+    letter-spacing: 3px;
+  }
+  .logo span { color: var(--text); }
+  .logo em { color: var(--accent2); font-style: normal; }
+
+  #timer {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--accent);
+    background: rgba(0,255,179,0.07);
+    border: 1px solid rgba(0,255,179,0.2);
+    padding: 8px 20px;
+    border-radius: 8px;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+  }
+  #timer.warning {
+    color: var(--wrong);
+    border-color: rgba(255,23,68,0.4);
+    background: rgba(255,23,68,0.07);
+    animation: blink 0.9s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .progress-bar-wrap { height: 3px; background: var(--border); position: sticky; top: 65px; z-index: 99; }
+  #progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 0%; transition: width 0.3s; }
+
+  .container { max-width: 880px; margin: 0 auto; padding: 44px 20px 100px; }
+
+  .test-hero { text-align: center; margin-bottom: 52px; }
+  .test-hero h1 { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+  .test-hero h1 span { color: var(--accent); }
+  .test-hero h1 em { color: var(--accent2); font-style: normal; }
+  .test-hero p { color: var(--muted); font-size: 0.93rem; margin-bottom: 16px; }
+
+  .topics-row {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .topic-badge {
+    font-size: 0.72rem; padding: 4px 12px; border-radius: 100px;
+    background: rgba(0,255,179,0.08); border: 1px solid rgba(0,255,179,0.18);
+    color: var(--accent); letter-spacing: 0.5px;
+  }
+
+  .stats-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .stat-chip {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 7px 16px; border-radius: 100px; font-size: 0.8rem; color: var(--muted);
+  }
+  .stat-chip strong { color: var(--text); margin-left: 4px; }
+
+  /* ─── Question Card ─── */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px 30px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .question-card::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--border);
+    transition: background 0.25s;
+  }
+  .question-card.answered::after { background: var(--accent); }
+  .question-card.answered { border-color: rgba(0,255,179,0.15); }
+
+  .q-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .q-num {
+    font-family: 'Space Mono', monospace; font-size: 0.72rem;
+    color: var(--muted); background: var(--surface); padding: 3px 9px; border-radius: 4px;
+  }
+  .difficulty {
+    font-size: 0.68rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 4px; letter-spacing: 0.8px; text-transform: uppercase;
+  }
+  .diff-easy   { background: rgba(0,230,118,0.1);  color: var(--easy); }
+  .diff-medium { background: rgba(255,171,64,0.1); color: var(--medium); }
+  .diff-hard   { background: rgba(255,82,82,0.12); color: var(--hard); }
+
+  .topic-tag {
+    font-size: 0.68rem; color: var(--muted); background: var(--surface);
+    padding: 3px 9px; border-radius: 4px; margin-left: auto;
+  }
+
+  .q-text { font-size: 0.97rem; line-height: 1.7; color: var(--text); margin-bottom: 18px; }
+  .q-text code {
+    font-family: 'Space Mono', monospace;
+    background: rgba(0,255,179,0.07);
+    color: var(--accent); padding: 2px 7px; border-radius: 4px; font-size: 0.88em;
+  }
+
+  .code-block {
+    font-family: 'Space Mono', monospace;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    line-height: 1.8;
+    color: #a8d8cf;
+    margin-bottom: 16px;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .code-block .kw  { color: #ff6b35; }
+  .code-block .str { color: #ffcc80; }
+  .code-block .num { color: #80cbc4; }
+  .code-block .cm  { color: #4d7068; }
+
+  .options { display: flex; flex-direction: column; gap: 9px; }
+  .option-label {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; cursor: pointer; transition: all 0.15s; font-size: 0.9rem;
+  }
+  .option-label:hover { border-color: rgba(0,255,179,0.35); background: rgba(0,255,179,0.04); }
+  .option-label input[type="radio"] { display: none; }
+  .option-label.selected { border-color: var(--accent); background: rgba(0,255,179,0.07); color: var(--accent); }
+  .option-label code {
+    font-family: 'Space Mono', monospace;
+    background: rgba(255,255,255,0.05); color: var(--accent);
+    padding: 1px 6px; border-radius: 3px; font-size: 0.87em;
+  }
+  .opt-letter {
+    font-family: 'Space Mono', monospace; font-size: 0.72rem; font-weight: 700;
+    color: var(--muted); min-width: 22px; height: 22px;
+    background: var(--border); border-radius: 4px;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0;
+  }
+  .option-label.selected .opt-letter { background: var(--accent); color: var(--bg); }
+
+  /* ─── Submit ─── */
+  .submit-area {
+    text-align: center; margin-top: 50px; padding: 30px 24px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  }
+  .submit-area p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+  #answered-count { color: var(--accent); font-weight: 600; }
+
+  .btn-submit {
+    font-family: 'Space Mono', monospace;
+    background: linear-gradient(135deg, var(--accent), #00c896);
+    color: var(--bg); border: none; padding: 15px 50px;
+    border-radius: 10px; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; letter-spacing: 1.5px; transition: all 0.2s;
+    box-shadow: 0 0 28px rgba(0,255,179,0.18);
+  }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 0 42px rgba(0,255,179,0.32); }
+
+  /* ─── Results ─── */
+  #result-screen { display: none; max-width: 880px; margin: 0 auto; padding: 60px 20px 80px; animation: fadeUp 0.5s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+
+  .result-hero { text-align: center; margin-bottom: 44px; }
+  .score-ring { width: 190px; height: 190px; margin: 0 auto 24px; position: relative; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring-num {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .score-pct { font-family: 'Space Mono', monospace; font-size: 2.4rem; font-weight: 700; color: var(--accent); }
+  .score-lbl { font-size: 0.72rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+
+  .result-title { font-family: 'Space Mono', monospace; font-size: 1.7rem; margin-bottom: 8px; }
+  .result-subtitle { color: var(--muted); font-size: 0.93rem; }
+
+  .result-cards {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 40px;
+  }
+  .result-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px; text-align: center;
+  }
+  .result-card .val { font-family:'Space Mono',monospace; font-size:2rem; font-weight:700; display:block; margin-bottom:4px; }
+  .result-card .lbl { font-size:0.76rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+  .rc-correct .val { color: var(--correct); }
+  .rc-wrong .val   { color: var(--wrong); }
+  .rc-score .val   { color: var(--accent); }
+
+  .breakdown-section { margin-bottom: 36px; }
+  .breakdown-section h2 {
+    font-family: 'Space Mono', monospace; font-size: 0.9rem; color: var(--muted);
+    letter-spacing: 1px; margin-bottom: 14px;
+  }
+  .topic-breakdown { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tb-chip {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 16px; font-size: 0.82rem;
+  }
+  .tb-chip .tb-name { color: var(--muted); font-size: 0.72rem; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
+  .tb-chip .tb-val { font-family: 'Space Mono', monospace; font-weight: 700; color: var(--accent); }
+
+  .review-section { margin-top: 40px; }
+  .review-section h2 { font-family:'Space Mono',monospace; font-size:0.9rem; color:var(--muted); margin-bottom:18px; letter-spacing:1px; }
+  .review-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 22px; margin-bottom: 12px;
+  }
+  .review-card.r-correct { border-left: 3px solid var(--correct); }
+  .review-card.r-wrong   { border-left: 3px solid var(--wrong); }
+  .review-card.r-skipped { border-left: 3px solid var(--muted); }
+
+  .review-q { font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; }
+  .review-q code { font-family:'Space Mono',monospace; background:var(--surface); color:var(--accent); padding:2px 6px; border-radius:4px; font-size:0.87em; }
+  .review-ans { display:flex; gap:10px; flex-wrap:wrap; }
+  .ans-chip { padding:4px 12px; border-radius:6px; font-family:'Space Mono',monospace; font-size:0.78rem; }
+  .ans-chip.correct { background:rgba(0,230,118,0.12); color:var(--correct); }
+  .ans-chip.wrong   { background:rgba(255,23,68,0.12);  color:var(--wrong); }
+  .ans-chip.skipped { background:rgba(77,112,104,0.15); color:var(--muted); }
+
+  .btn-retry {
+    font-family:'Space Mono',monospace; background:transparent; color:var(--accent);
+    border:1px solid var(--accent); padding:12px 32px; border-radius:8px;
+    font-size:0.88rem; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+    margin-top:32px; display:block; margin-left:auto; margin-right:auto;
+  }
+  .btn-retry:hover { background:rgba(0,255,179,0.07); }
+
+  @media(max-width:600px){
+    header { padding:14px 20px; }
+    .question-card { padding:18px; }
+    .result-cards { grid-template-columns:1fr; }
+    .test-hero h1 { font-size:1.4rem; }
+    .code-block { font-size:0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PY<span>TEST</span> // <em>WEEK 2</em></div>
+  <div id="timer">60:00</div>
+</header>
+<div class="progress-bar-wrap"><div id="progress-bar"></div></div>
+
+<!-- TEST SCREEN -->
+<div id="test-screen">
+  <div class="container">
+    <div class="test-hero">
+      <h1>Python <span>Logic &</span> <em>Conditionals</em></h1>
+      <p>50 MCQs · 60 Minutes · Logic-heavy questions with real code output challenges</p>
+      <div class="topics-row">
+        <span class="topic-badge">Logical Operators</span>
+        <span class="topic-badge">Increment Operators</span>
+        <span class="topic-badge">if / elif / else</span>
+        <span class="topic-badge">Nested if</span>
+        <span class="topic-badge">Conditional Logic</span>
+      </div>
+      <div class="stats-row">
+        <div class="stat-chip">Questions <strong>50</strong></div>
+        <div class="stat-chip">Easy <strong>15</strong></div>
+        <div class="stat-chip">Medium <strong>15</strong></div>
+        <div class="stat-chip">Hard <strong>20</strong></div>
+      </div>
+    </div>
+    <div id="questions-container"></div>
+    <div class="submit-area">
+      <p>Answered <span id="answered-count">0</span> / 50 questions</p>
+      <button class="btn-submit" onclick="submitTest()">SUBMIT TEST</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="result-screen">
+  <div class="result-hero">
+    <div class="score-ring">
+      <svg width="190" height="190" viewBox="0 0 190 190">
+        <circle cx="95" cy="95" r="82" fill="none" stroke="#141c1a" stroke-width="14"/>
+        <circle id="ring-circle" cx="95" cy="95" r="82" fill="none" stroke="url(#g1)"
+          stroke-width="14" stroke-dasharray="515.22" stroke-dashoffset="515.22" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00ffb3"/>
+            <stop offset="100%" stop-color="#ff6b35"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="score-ring-num">
+        <span class="score-pct" id="res-pct">0%</span>
+        <span class="score-lbl">Score</span>
+      </div>
+    </div>
+    <h1 class="result-title" id="res-title">Test Complete</h1>
+    <p class="result-subtitle" id="res-sub">Here's your breakdown</p>
+  </div>
+
+  <div class="result-cards">
+    <div class="result-card rc-correct"><span class="val" id="res-correct">0</span><span class="lbl">Correct</span></div>
+    <div class="result-card rc-wrong"><span class="val" id="res-wrong">0</span><span class="lbl">Wrong / Skipped</span></div>
+    <div class="result-card rc-score"><span class="val" id="res-marks">0/50</span><span class="lbl">Marks</span></div>
+  </div>
+
+  <div class="breakdown-section">
+    <h2>// TOPIC BREAKDOWN</h2>
+    <div class="topic-breakdown" id="topic-breakdown"></div>
+  </div>
+
+  <div class="review-section">
+    <h2>// ANSWER REVIEW</h2>
+    <div id="review-container"></div>
+  </div>
+
+  <button class="btn-retry" onclick="retryTest()">↺ RETRY TEST</button>
+</div>
+
+<script>
+// helper for code blocks inside question text
+function cb(code){ return `<div class="code-block">${code}</div>`; }
+function kw(t){ return `<span class="kw">${t}</span>`; }
+function cm(t){ return `<span class="cm">${t}</span>`; }
+function st(t){ return `<span class="str">${t}</span>`; }
+function nm(t){ return `<span class="num">${t}</span>`; }
+
+const questions = [
+
+  // ══════════════════════════════════════
+  //  EASY  (Q1 – Q15)
+  // ══════════════════════════════════════
+  {
+    q: "Which keyword is used to check a condition in Python?",
+    opts: ["when", "if", "check", "test"],
+    ans: 1, diff:"easy", topic:"if / else"
+  },
+  {
+    q: "What keyword is used to handle a second condition when <code>if</code> is False?",
+    opts: ["else if", "elif", "elseif", "otherwise"],
+    ans: 1, diff:"easy", topic:"if / else"
+  },
+  {
+    q: "What does the <code>else</code> block do?",
+    opts: ["Runs when the if condition is True","Runs when all conditions are False","Replaces if","None of the above"],
+    ans: 1, diff:"easy", topic:"if / else"
+  },
+  {
+    q: "Which logical operator returns <code>True</code> only when BOTH conditions are True?",
+    opts: ["or", "not", "and", "xor"],
+    ans: 2, diff:"easy", topic:"Logical Operators"
+  },
+  {
+    q: "Which logical operator returns <code>True</code> when AT LEAST ONE condition is True?",
+    opts: ["and", "not", "nor", "or"],
+    ans: 3, diff:"easy", topic:"Logical Operators"
+  },
+  {
+    q: "What does the <code>not</code> operator do?",
+    opts: ["Returns True if both are False","Reverses a boolean value","Checks equality","Adds two booleans"],
+    ans: 1, diff:"easy", topic:"Logical Operators"
+  },
+  {
+    q: "What is the output of <code>not True</code>?",
+    opts: ["True", "None", "Error", "False"],
+    ans: 3, diff:"easy", topic:"Logical Operators"
+  },
+  {
+    q: "What does <code>True and False</code> evaluate to?",
+    opts: ["True", "False", "None", "Error"],
+    ans: 1, diff:"easy", topic:"Logical Operators"
+  },
+  {
+    q: "Does Python support <code>++</code> (increment) operator like C or Java?",
+    opts: ["Yes, x++ works","No, Python does not have ++","Yes, but only ++x","Yes, both ++x and x++"],
+    ans: 1, diff:"easy", topic:"Increment Operators"
+  },
+  {
+    q: "What is the correct way to increment <code>x</code> by 1 in Python?",
+    opts: ["x++", "x += 1", "++x", "x =+ 1"],
+    ans: 1, diff:"easy", topic:"Increment Operators"
+  },
+  {
+    q: "What does <code>x -= 3</code> mean?",
+    opts: ["x = x + 3","x = x * 3","x = x - 3","x = -3"],
+    ans: 2, diff:"easy", topic:"Increment Operators"
+  },
+  {
+    q: "What is printed by the code below?" + cb(`x = <span class="num">10</span>\n${kw('if')} x > <span class="num">5</span>:\n    ${kw('print')}(<span class="str">"Big"</span>)`),
+    opts: ["Nothing", "Big", "Error", "5"],
+    ans: 1, diff:"easy", topic:"if / else"
+  },
+  {
+    q: "What is printed by the code below?" + cb(`x = <span class="num">3</span>\n${kw('if')} x > <span class="num">5</span>:\n    ${kw('print')}(<span class="str">"A"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"B"</span>)`),
+    opts: ["A", "B", "AB", "Error"],
+    ans: 1, diff:"easy", topic:"if / else"
+  },
+  {
+    q: "How many <code>elif</code> blocks can you use after an <code>if</code>?",
+    opts: ["Only 1","Only 2","As many as needed","None"],
+    ans: 2, diff:"easy", topic:"if / else"
+  },
+  {
+    q: "What does <code>True or False</code> evaluate to?",
+    opts: ["False", "None", "True", "Error"],
+    ans: 2, diff:"easy", topic:"Logical Operators"
+  },
+
+  // ══════════════════════════════════════
+  //  MEDIUM  (Q16 – Q30)
+  // ══════════════════════════════════════
+  {
+    q: "What is the output of the code below?" + cb(`x = <span class="num">5</span>\nx += <span class="num">3</span>\nx -= <span class="num">2</span>\n${kw('print')}(x)`),
+    opts: ["5", "8", "6", "3"],
+    ans: 2, diff:"medium", topic:"Increment Operators"
+  },
+  {
+    q: "What is printed?" + cb(`a = <span class="num">10</span>; b = <span class="num">20</span>\n${kw('if')} a > b:\n    ${kw('print')}(<span class="str">"A"</span>)\n${kw('elif')} a == b:\n    ${kw('print')}(<span class="str">"Equal"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"B"</span>)`),
+    opts: ["A", "Equal", "B", "Nothing"],
+    ans: 2, diff:"medium", topic:"if / else"
+  },
+  {
+    q: "What is the output?" + cb(`x = <span class="num">7</span>\n${kw('if')} x % <span class="num">2</span> == <span class="num">0</span>:\n    ${kw('print')}(<span class="str">"Even"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Odd"</span>)`),
+    opts: ["Even", "Odd", "7", "Error"],
+    ans: 1, diff:"medium", topic:"if / else"
+  },
+  {
+    q: "What does <code>not (5 > 3)</code> evaluate to?",
+    opts: ["True", "False", "None", "Error"],
+    ans: 1, diff:"medium", topic:"Logical Operators"
+  },
+  {
+    q: "What is the output?" + cb(`x = <span class="num">4</span>\n${kw('if')} x > <span class="num">2</span> <span class="kw">and</span> x < <span class="num">10</span>:\n    ${kw('print')}(<span class="str">"In range"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Out"</span>)`),
+    opts: ["Out", "In range", "Error", "Nothing"],
+    ans: 1, diff:"medium", topic:"Logical Operators"
+  },
+  {
+    q: "What does <code>0 or 5</code> evaluate to in Python?",
+    opts: ["0", "True", "5", "False"],
+    ans: 2, diff:"medium", topic:"Logical Operators"
+  },
+  {
+    q: "What does <code>0 and 5</code> evaluate to?",
+    opts: ["5", "True", "False", "0"],
+    ans: 3, diff:"medium", topic:"Logical Operators"
+  },
+  {
+    q: "What is printed?" + cb(`x = <span class="num">15</span>\n${kw('if')} x > <span class="num">10</span>:\n    ${kw('if')} x > <span class="num">20</span>:\n        ${kw('print')}(<span class="str">"Very Big"</span>)\n    ${kw('else')}:\n        ${kw('print')}(<span class="str">"Medium"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Small"</span>)`),
+    opts: ["Small", "Very Big", "Medium", "Error"],
+    ans: 2, diff:"medium", topic:"Nested if"
+  },
+  {
+    q: "What is the value of <code>x</code> after this?" + cb(`x = <span class="num">10</span>\nx *= <span class="num">2</span>\nx -= <span class="num">5</span>`),
+    opts: ["15", "20", "25", "5"],
+    ans: 0, diff:"medium", topic:"Increment Operators"
+  },
+  {
+    q: "What does <code>not not True</code> evaluate to?",
+    opts: ["False", "None", "Error", "True"],
+    ans: 3, diff:"medium", topic:"Logical Operators"
+  },
+  {
+    q: "What is printed?" + cb(`score = <span class="num">72</span>\n${kw('if')} score >= <span class="num">90</span>:\n    ${kw('print')}(<span class="str">"A"</span>)\n${kw('elif')} score >= <span class="num">70</span>:\n    ${kw('print')}(<span class="str">"B"</span>)\n${kw('elif')} score >= <span class="num">50</span>:\n    ${kw('print')}(<span class="str">"C"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"F"</span>)`),
+    opts: ["A", "B", "C", "F"],
+    ans: 1, diff:"medium", topic:"if / else"
+  },
+  {
+    q: "What is the result of <code>5 &gt; 3 and 10 &lt; 20</code>?",
+    opts: ["False", "None", "Error", "True"],
+    ans: 3, diff:"medium", topic:"Logical Operators"
+  },
+  {
+    q: "What does <code>x //= 3</code> do when <code>x = 10</code>?",
+    opts: ["x becomes 3.33","x becomes 3","x becomes 30","x becomes 7"],
+    ans: 1, diff:"medium", topic:"Increment Operators"
+  },
+  {
+    q: "What is printed?" + cb(`a = <span class="num">5</span>; b = <span class="num">5</span>\n${kw('if')} a == b:\n    ${kw('print')}(<span class="str">"Same"</span>)\n${kw('elif')} a != b:\n    ${kw('print')}(<span class="str">"Different"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"None"</span>)`),
+    opts: ["Different", "None", "Same", "Error"],
+    ans: 2, diff:"medium", topic:"if / else"
+  },
+  {
+    q: "What is the output of <code>bool(0 or '' or [])</code>?",
+    opts: ["True", "None", "Error", "False"],
+    ans: 3, diff:"medium", topic:"Logical Operators"
+  },
+
+  // ══════════════════════════════════════
+  //  HARD  (Q31 – Q50)
+  // ══════════════════════════════════════
+  {
+    q: "What is printed?" + cb(`x = <span class="num">5</span>\n${kw('if')} x > <span class="num">3</span>:\n    x += <span class="num">2</span>\n    ${kw('if')} x > <span class="num">6</span>:\n        x += <span class="num">1</span>\n${kw('print')}(x)`),
+    opts: ["5", "7", "8", "6"],
+    ans: 2, diff:"hard", topic:"Nested if"
+  },
+  {
+    q: "What does the code output?" + cb(`a = <span class="num">0</span>; b = <span class="num">5</span>\n${kw('if')} a ${kw('or')} b:\n    ${kw('print')}(<span class="str">"Yes"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"No"</span>)`),
+    opts: ["No", "0", "Yes", "Error"],
+    ans: 2, diff:"hard", topic:"Logical Operators"
+  },
+  {
+    q: "What is the output?" + cb(`x = <span class="num">10</span>; y = <span class="num">20</span>; z = <span class="num">15</span>\n${kw('if')} x < y ${kw('and')} y > z:\n    ${kw('print')}(<span class="str">"OK"</span>)\n${kw('elif')} x < z ${kw('or')} y == z:\n    ${kw('print')}(<span class="str">"Maybe"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"No"</span>)`),
+    opts: ["Maybe", "No", "Error", "OK"],
+    ans: 3, diff:"hard", topic:"Logical Operators"
+  },
+  {
+    q: "What is printed?" + cb(`x = <span class="num">100</span>\nx //= <span class="num">3</span>\nx %= <span class="num">10</span>\n${kw('print')}(x)`),
+    opts: ["3", "10", "1", "33"],
+    ans: 2, diff:"hard", topic:"Increment Operators"
+  },
+  {
+    q: "What is the output?" + cb(`n = <span class="num">18</span>\n${kw('if')} n % <span class="num">2</span> == <span class="num">0</span> ${kw('and')} n % <span class="num">3</span> == <span class="num">0</span>:\n    ${kw('print')}(<span class="str">"DivBy6"</span>)\n${kw('elif')} n % <span class="num">2</span> == <span class="num">0</span>:\n    ${kw('print')}(<span class="str">"Even"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Odd"</span>)`),
+    opts: ["Even", "Odd", "Error", "DivBy6"],
+    ans: 3, diff:"hard", topic:"Conditional Logic"
+  },
+  {
+    q: "What is printed?" + cb(`x = <span class="num">5</span>\ny = <span class="num">10</span>\nz = x ${kw('if')} x > y ${kw('else')} y\n${kw('print')}(z)`),
+    opts: ["5", "True", "15", "10"],
+    ans: 3, diff:"hard", topic:"Conditional Logic"
+  },
+  {
+    q: "What is the output?" + cb(`a = <span class="num">3</span>; b = <span class="num">3</span>; c = <span class="num">3</span>\n${kw('if')} a == b == c:\n    ${kw('print')}(<span class="str">"All Equal"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Not Equal"</span>)`),
+    opts: ["Not Equal", "Error", "None", "All Equal"],
+    ans: 3, diff:"hard", topic:"Conditional Logic"
+  },
+  {
+    q: "What is printed?" + cb(`x = <span class="num">50</span>\nx **= <span class="num">2</span>\nx //= <span class="num">100</span>\n${kw('print')}(x)`),
+    opts: ["2500", "250", "25", "5"],
+    ans: 2, diff:"hard", topic:"Increment Operators"
+  },
+  {
+    q: "What does this print?" + cb(`age = <span class="num">17</span>; gpa = <span class="num">3.8</span>\n${kw('if')} age >= <span class="num">18</span> ${kw('and')} gpa >= <span class="num">3.5</span>:\n    ${kw('print')}(<span class="str">"Scholar"</span>)\n${kw('elif')} age < <span class="num">18</span> ${kw('and')} gpa >= <span class="num">3.5</span>:\n    ${kw('print')}(<span class="str">"Junior Scholar"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"No Award"</span>)`),
+    opts: ["Scholar", "No Award", "Junior Scholar", "Error"],
+    ans: 2, diff:"hard", topic:"Conditional Logic"
+  },
+  {
+    q: "What is the output?" + cb(`x = <span class="num">0</span>\n${kw('if')} ${kw('not')} x:\n    ${kw('print')}(<span class="str">"Zero"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Non-Zero"</span>)`),
+    opts: ["Non-Zero", "Error", "None", "Zero"],
+    ans: 3, diff:"hard", topic:"Logical Operators"
+  },
+  {
+    q: "What is printed?" + cb(`x = <span class="num">10</span>\n${kw('if')} x > <span class="num">5</span>:\n    ${kw('if')} x > <span class="num">8</span>:\n        ${kw('if')} x > <span class="num">12</span>:\n            ${kw('print')}(<span class="str">"Very High"</span>)\n        ${kw('else')}:\n            ${kw('print')}(<span class="str">"High"</span>)\n    ${kw('else')}:\n        ${kw('print')}(<span class="str">"Medium"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Low"</span>)`),
+    opts: ["Low", "Medium", "Very High", "High"],
+    ans: 3, diff:"hard", topic:"Nested if"
+  },
+  {
+    q: "What does this evaluate to? <code>(True and False) or (not False)</code>",
+    opts: ["False", "None", "Error", "True"],
+    ans: 3, diff:"hard", topic:"Logical Operators"
+  },
+  {
+    q: "What is the output?" + cb(`x = <span class="num">5</span>; y = <span class="num">10</span>\nx, y = y, x + y\n${kw('print')}(x, y)`),
+    opts: ["10 15", "5 10", "15 10", "10 10"],
+    ans: 0, diff:"hard", topic:"Increment Operators"
+  },
+  {
+    q: "What is printed?" + cb(`a = <span class="num">2</span>; b = <span class="num">3</span>; c = <span class="num">1</span>\n${kw('if')} a > c ${kw('and')} b > a:\n    ${kw('if')} a + b > <span class="num">4</span>:\n        ${kw('print')}(<span class="str">"Win"</span>)\n    ${kw('else')}:\n        ${kw('print')}(<span class="str">"Try"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Lose"</span>)`),
+    opts: ["Lose", "Try", "Win", "Error"],
+    ans: 2, diff:"hard", topic:"Nested if"
+  },
+  {
+    q: "What is the output?" + cb(`n = <span class="num">-5</span>\n${kw('if')} n < <span class="num">0</span>:\n    n = -n\n${kw('if')} n % <span class="num">2</span> == <span class="num">0</span>:\n    ${kw('print')}(<span class="str">"Even"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"Odd"</span>)`),
+    opts: ["Even", "-5", "Error", "Odd"],
+    ans: 3, diff:"hard", topic:"Conditional Logic"
+  },
+  {
+    q: "What is the value of <code>result</code>?" + cb(`x = <span class="num">8</span>\nresult = <span class="str">"Pass"</span> ${kw('if')} x >= <span class="num">5</span> ${kw('else')} <span class="str">"Fail"</span>\n${kw('if')} x >= <span class="num">9</span>:\n    result = <span class="str">"Distinction"</span>\n${kw('print')}(result)`),
+    opts: ["Fail", "Distinction", "None", "Pass"],
+    ans: 3, diff:"hard", topic:"Conditional Logic"
+  },
+  {
+    q: "What is printed?" + cb(`x = <span class="num">10</span>\n${kw('if')} x > <span class="num">5</span> ${kw('or')} x < <span class="num">20</span>:\n    ${kw('if')} ${kw('not')} x == <span class="num">10</span>:\n        ${kw('print')}(<span class="str">"A"</span>)\n    ${kw('else')}:\n        ${kw('print')}(<span class="str">"B"</span>)\n${kw('else')}:\n    ${kw('print')}(<span class="str">"C"</span>)`),
+    opts: ["C", "A", "None", "B"],
+    ans: 3, diff:"hard", topic:"Nested if"
+  },
+  {
+    q: "What does <code>1 and 2 and 3</code> evaluate to?",
+    opts: ["True", "1", "3", "False"],
+    ans: 2, diff:"hard", topic:"Logical Operators"
+  },
+  {
+    q: "What is printed?" + cb(`marks = <span class="num">45</span>\ngrade = <span class="str">"F"</span>\n${kw('if')} marks >= <span class="num">90</span>: grade = <span class="str">"A"</span>\n${kw('elif')} marks >= <span class="num">80</span>: grade = <span class="str">"B"</span>\n${kw('elif')} marks >= <span class="num">60</span>: grade = <span class="str">"C"</span>\n${kw('elif')} marks >= <span class="num">45</span>: grade = <span class="str">"D"</span>\n${kw('print')}(grade)`),
+    opts: ["F", "C", "D", "B"],
+    ans: 2, diff:"hard", topic:"if / else"
+  },
+  {
+    q: "What is the final value of <code>x</code>?" + cb(`x = <span class="num">2</span>\n${kw('if')} x < <span class="num">5</span>:\n    x += x\n    ${kw('if')} x < <span class="num">5</span>:\n        x += x\n${kw('print')}(x)`),
+    opts: ["2", "4", "8", "16"],
+    ans: 2, diff:"hard", topic:"Nested if"
+  }
+];
+
+let timerInterval, timeLeft = 3600;
+
+function buildQuestions() {
+  const container = document.getElementById('questions-container');
+  const letters = ['A','B','C','D'];
+  questions.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `card-${i}`;
+    card.innerHTML = `
+      <div class="q-meta">
+        <span class="q-num">Q${String(i+1).padStart(2,'0')}</span>
+        <span class="difficulty diff-${q.diff}">${q.diff}</span>
+        <span class="topic-tag">${q.topic}</span>
+      </div>
+      <div class="q-text">${q.q}</div>
+      <div class="options" id="opts-${i}">
+        ${q.opts.map((opt,j) => `
+          <label class="option-label" id="opt-${i}-${j}" onclick="selectOpt(${i},${j})">
+            <input type="radio" name="q${i}" value="${j}">
+            <span class="opt-letter">${letters[j]}</span>
+            <span>${opt}</span>
+          </label>`).join('')}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function selectOpt(qIdx, optIdx) {
+  document.getElementById(`card-${qIdx}`).querySelectorAll('.option-label').forEach(l=>l.classList.remove('selected'));
+  document.getElementById(`opt-${qIdx}-${optIdx}`).classList.add('selected');
+  document.getElementById(`card-${qIdx}`).classList.add('answered');
+  updateProgress();
+}
+
+function updateProgress() {
+  const n = document.querySelectorAll('.question-card.answered').length;
+  document.getElementById('answered-count').textContent = n;
+  document.getElementById('progress-bar').style.width = (n/50*100)+'%';
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    const m = Math.floor(timeLeft/60).toString().padStart(2,'0');
+    const s = (timeLeft%60).toString().padStart(2,'0');
+    document.getElementById('timer').textContent = `${m}:${s}`;
+    if (timeLeft <= 300) document.getElementById('timer').classList.add('warning');
+    if (timeLeft <= 0) { clearInterval(timerInterval); submitTest(); }
+  }, 1000);
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  let correct = 0;
+  const topicMap = {};
+  const results = questions.map((q, i) => {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const chosen = sel ? parseInt(sel.value) : null;
+    const isCorrect = chosen === q.ans;
+    if (isCorrect) correct++;
+    if (!topicMap[q.topic]) topicMap[q.topic] = {c:0,t:0};
+    topicMap[q.topic].t++;
+    if (isCorrect) topicMap[q.topic].c++;
+    return { q:q.q, correct:isCorrect, chosen, ans:q.ans, opts:q.opts, skipped:chosen===null };
+  });
+
+  const pct = Math.round(correct/50*100);
+  document.getElementById('test-screen').style.display = 'none';
+  const rs = document.getElementById('result-screen');
+  rs.style.display = 'block';
+  rs.scrollIntoView({ behavior:'smooth' });
+
+  document.getElementById('res-pct').textContent = pct+'%';
+  document.getElementById('res-correct').textContent = correct;
+  document.getElementById('res-wrong').textContent = 50-correct;
+  document.getElementById('res-marks').textContent = `${correct}/50`;
+
+  const grades = [
+    [90,'Exceptional! 🔥','You crushed the logic challenges.'],
+    [75,'Outstanding! ✨','Strong logical reasoning skills.'],
+    [60,'Good Job! 💪','Solid understanding, keep practising.'],
+    [40,'Keep Going 📖','Review conditionals and try again.'],
+    [0,'Keep Practising 🎯','Logic takes time — you will get it!']
+  ];
+  const [,title,sub] = grades.find(([t])=>pct>=t);
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-sub').textContent = sub;
+
+  const offset = 515.22*(1-pct/100);
+  const ring = document.getElementById('ring-circle');
+  ring.style.transition = 'stroke-dashoffset 1.6s ease';
+  setTimeout(()=>ring.style.strokeDashoffset=offset, 120);
+
+  // topic breakdown
+  const tbContainer = document.getElementById('topic-breakdown');
+  Object.entries(topicMap).forEach(([topic,{c,t}])=>{
+    const chip = document.createElement('div');
+    chip.className = 'tb-chip';
+    chip.innerHTML = `<div class="tb-name">${topic}</div><div class="tb-val">${c}/${t}</div>`;
+    tbContainer.appendChild(chip);
+  });
+
+  // review
+  const rc = document.getElementById('review-container');
+  const letters = ['A','B','C','D'];
+  results.forEach((r,i) => {
+    const div = document.createElement('div');
+    const cls = r.skipped?'r-skipped':r.correct?'r-correct':'r-wrong';
+    div.className = `review-card ${cls}`;
+    let ansHtml='';
+    if (r.skipped) {
+      ansHtml=`<span class="ans-chip skipped">Skipped</span><span class="ans-chip correct">✓ ${letters[r.ans]}. ${r.opts[r.ans]}</span>`;
+    } else if (r.correct) {
+      ansHtml=`<span class="ans-chip correct">✓ ${letters[r.chosen]}. ${r.opts[r.chosen]}</span>`;
+    } else {
+      ansHtml=`<span class="ans-chip wrong">✗ ${letters[r.chosen]}. ${r.opts[r.chosen]}</span><span class="ans-chip correct">✓ ${letters[r.ans]}. ${r.opts[r.ans]}</span>`;
+    }
+    div.innerHTML=`<div class="review-q"><strong>Q${i+1}.</strong> ${r.q}</div><div class="review-ans">${ansHtml}</div>`;
+    rc.appendChild(div);
+  });
+}
+
+function retryTest() { location.reload(); }
+
+buildQuestions();
+startTimer();
+</script>
+</body>
+</html>
